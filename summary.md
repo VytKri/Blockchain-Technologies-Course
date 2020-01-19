@@ -34,10 +34,32 @@
 
 * Neblogas [video](https://youtu.be/bBC-nXj3Ng4) apie tai, kaip veikia _Bitcoin_'as.
 
+### Proof of Stake
+
+#### PoW vs PoS
+
+| | PoW       | PoS      |
+| ------------- | -------------| -------------|
+| Kas turi sprendimo galią? | _Miners_ proporcingai savo skaičiavimų galiai. | _Validators_ proporcingai savo užstatytai sumai. |
+| Motyvacija elgtis pagal taisykles | Blogiausiu atveju prarandami išleisti resursai (elektra ir skaičiavimo pajėgumai). | Ekonominė: rizikuojama užstatyta valiuta, dėl piktybiškų veiksmų gali smukti valiutos vertė, o tuo pačiu ir piktybinio veikėjo turtas. |
+
+#### PoS pliusai ir minusai
+
+| Pliusai       | Minusai      |
+| ------------- | -------------|
+| Mažesnė motyvacija sukčiauti. | Turtingiausi toliau turtingėja. |
+| Tikimybė siūlyti bloką tiesiškai proporcinga užstatytai sumai (PoW atveju dideli žaidėjai gali naudotis masto ekonomika - kuo daugiau elektros perka, tuo mažiau ji kainuoja.) | Mažas likvidumas (užšaldomas kapitalas). |
+| Ekonomiškesnis (nereikia daug el. energijos). | Nauji atakų vektoriai: _long range attack_) |
+
+#### _Flavors_
+
+* _Chain based_ - iš užsiregistravusių ir užstačiusių valiutą validatorių būrio pagal tikimybę, proporcingą validatoriaus užstatytai sumai, išrenkamas validatorius, kuris sukuria naują bloką. Jis taip pat gauną atlygį už bloko sukūrimą ir bloko transakcijų mokesčius. _Availability over consistency_.
+* _BFT_ - iš užsiregistravusių ir užstačiusių valiutą validatorių būrio pagal tikimybę, proporcingą validatoriaus užstatytai sumai, išrenkamas validatorius _pasiūlo_ naują bloką. Tuomet likę validatoriai balsuoja, ar jie priima naują bloką, ar ne. Jei daugiau nei 2/3 validatorių balsuoja teigiamai, blokas pridedamas į grandinę. Priešingu atveju renkamas naujas bloko siūlytojas ir procesas kartojamas. Sėkmės atveju siūlytojas gauną atlygį už bloko sukūrimą ir bloko transakcijų mokesčius. _Consistency over availability_.
+
 ### CAP teorema
 
 * Išskirstytose sistemose (_distributed systems_) galima turėti tik 2 iš 3:
-  * Vientisumą (_consistency_). Kiekvienas skaitymas (_read_) gauna arba tą patį rezultatą, arba klaidą).
+  * Vientisumą (_consistency_). Kiekvienas skaitymas (_read_) gauna arba tą patį rezultatą, arba klaidą (_no response_)).
     * Aukojama dažniausiai iš visų trijų.
     * Blokų grandinėse: kiekvienas mazgas turi kanoninę šaką, tad skirtingi mazgai mato skirtingą būseną.
     * Realiame pasaulyje palaukus tam tikrą kiekį blokų, blokas yra tikimybiškai finalizuojamas - tikimybė, jog blogas bus atmestas yra labai maža.
@@ -75,7 +97,7 @@
   * _Crash stop_ - vienas mazgas išsijungia tokiam laikui, kad jo išsijungimą pastebėtų tinklas.
   * _Crash recovery_ - mazgas išsijungia kuriam laikui. Tam tikruose konsensuso mechanizmuose atsigavęs mazgas gali būti traktuojamas kaip visiškai naujas mazgas. Pavyzdžiui, jei nedalyvavo 5 balsavimuose, mazgas panaikinamas. Nėra būdo nustatyti, ar mazgas buvo atsijungęs piktybiškai.
   * _Omission fault_ - mazgas kažko iš dalies nepadaro. Pavyzdžiui, replikavimas - yra pagrindinis mazgas ir 10 mazgų, kurie pasiima kopiją ir ją išsisaugo pas save. Klaida padaroma tada, kai mazgas pasiima kopiją, ją išsisaugo, bet nepraneša apie sėkmę (kai kurios replikos _broadcast_ metu gali gauti duomenis, bet nepranešti centriniam serveriui, kad gavo informaciją). Jei dalinai _apsirgusios_ replikos grįžta, atsiranda keista situacija - dauguma replikų yra corrupted.
-    * _R1_ patvirtina, kad gavo gera informaciją, _R2_ ir _R3_ turi _corrupted data_. Dingsta centrinis serveris, šaukiamasi pagalbos iš replikų, žiūrima, kur daugiausia sutampa duomenys (kokius duomenis turi dauguma). Jei _R1_ ir _R2_ turi vienodai nekorektiškus duomenis, o _R1_ - teisingus, teisingais laikomi _corrupted_ duomenys. \
+    * _R1_ patvirtina, kad gavo gera informaciją, _R2_ ir _R3_ turi _corrupted data_. Dingsta centrinis serveris, šaukiamasi pagalbos iš replikų, žiūrima, kur daugiausia sutampa duomenys (kokius duomenis turi dauguma). Jei _R2_ ir _R3_ turi vienodai nekorektiškus duomenis, o _R1_ - teisingus, teisingais laikomi _corrupted_ duomenys. \
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[C] \
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;\    \
       [R1] [R2] [R3]
@@ -96,6 +118,9 @@
 * Jei kanalas nepatikimas - nėra sprendimo, su mažiau nei _3m+1_ mazgu, kai blogiečių yra _m_.
 * _Byzantine faults_ nutinka dažnai. Jei žinutės nepasirašytos, reikia 4 atskirų mazgų, kurie atpažintų vieną blogą.
 * Apsisaugojimui reikia daug perteklinės įrangos. Pavyzdžiui, kosminiuose aparatuose yra trys kompiuteriai, kurie skaičiuoja tą patį.
+* _pBFT (practical BFT: pre-prepare, prepare & commit). Master node sends pre-prepare messages to other nodes, nodes accept valid messages, follow-up with a prepare message for all other nodes. If a node receives the original pre-prepare message and 2f (f - faulty nodes) prepare messages, it is prepared and sends out commit message. If a node receives f + 1 commit messages, it carries out the request and sends response to client. Client waits for f + 1 responses_.
+* _dBFT: (delegated BFT). For example in Neo network consensus nodes for next round are elected by all nodes, namely authorizing a few nodes to reach consensus and create new block, the other nodes will act as ordinary nodes to receive and verify blocks. This allows optimisation as the amount of nodes in network increases._
+* _Distributed systems: safety vs liveness. Consensus: validity (safety), agreement (safety), termination (liveness)._
 
 ### _FLP imposiibility_ (1985)
 
@@ -585,3 +610,4 @@ let mut num = m.lock().unwrap();
 
 * [Saulius Grigaitis, Partn. Doc. The Science Behind Blockchains](http://slides.com/saulius/byzantine-fault-tolerance-in-blockchains-6-9)
 * [Raymond Cheng, Dawn Song. Smart Contracts](https://berkeley-blockchain.github.io/cs294-144-s18/assets/docs/02-smartcontracts-jan-29-2018-v2.pdf)
+* [Blockchain at Berkeley](https://www.youtube.com/channel/UC5sgoRfoSp3jeX4DEqKLwKg)
